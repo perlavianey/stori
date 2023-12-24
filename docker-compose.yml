@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: composeapp
+    build: .
+    image: stori
+    links:
+      - db
+    depends_on:
+      - db
+  db:
+    container_name: composepostgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres  
+      POSTGRES_PASSWORD: p0stgr3s.D4t4b4s3
+    ports:
+     - "5432:5432"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes: 
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql

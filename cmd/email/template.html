@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <img src="https://comunidadblogger.net/wp-content/uploads/2022/03/stori-logo.jpg" width="145" height="120">
+    <h4>Dear {{.Name}}:</h4>
+    <p>Here you have your transactions summary:</p>
+    <p>{{ range $i := .Message}}{{$i}}<br/>
+        {{end}}</p>
+    <p>Thank you for using Stori!</p>
+</body>
+</html>
