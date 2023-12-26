@@ -27,8 +27,11 @@ Then it saves the records data into the database table <strong>transaction</stro
 ![Alt text](screenshot_database_model.png?raw=true "Postgres Database Model")
 
 <br>
-Then it makes the corresponding calculations to get the total balance, transactions per month and average debit and credit amounts and then builds a formatted email with the summary, which is sent to the customer in a pretty format. The csv file is also send as an attachment to the email: <br>
-If any of the records is not stored successfully in the database, an error is logged so he can make the corresponding troubleshooting.<br>
+Then it makes the corresponding calculations to get the total balance, transactions per month and average debit and credit amounts and then builds a formatted email with the summary, which is sent to the customer in a pretty format. The csv file is also sent as an attachment to the email:<br><br>
+
+![Alt text](screenshot_email.png?raw=true "Email screenshot")<br>
+
+If any of the records is not stored successfully in the database, an error is logged so he can make the corresponding troubleshooting.<br><br>
 <strong>Prerrequisites:</strong><br>
 To run this project you need:<br>
 <ol>
