@@ -35,7 +35,7 @@ To run this project you need:<br>
 <li>To have Docker and Go installed.</li>
 <li>To have an AWS account with S3 PUTObject permission.</li>
 <li>To have the AWS access key and secret access key to that AWS account.</li>
-<li>To have a S3 bucket named  <strong>transactions-stori-pv</strong>in that AWS account.</li>
+<li>To have a S3 bucket named  <strong>transactions-stori-pv</strong> in that AWS account.</li>
 </ol>
 <br>
 <strong>Usage:</strong><br>
