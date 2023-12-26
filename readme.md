@@ -6,7 +6,7 @@ As a feature, it's able to save the csv file in AWS S3.
 <br>
 <strong>GitHub repository:</strong><br> 
 https://github.com/perlavianey/stori<br>
-Release v.0.0: https://github.com/perlavianey/stori/releases/tag/storiChallengeDocker
+Release v1.0.0: https://github.com/perlavianey/stori/releases/tag/storiChallengeDocker
 <br>
 
 <strong>Built With:</strong><br>
@@ -22,13 +22,13 @@ The algorithm reads any file (or files) placed in the directory /app/directory i
 
 ![Alt text](screenshot_s3_aws.png?raw=true "AWS S3 screenshot")
 
-Then it saves the records data into the database table <strong>transaction</strong>. <br>The algorithm assumes that we have the account information stored in a database table (named <strong>account</strong> which contains the accountId, the name and the email address of the customers. It's linked to the transaction with the table field <strong>account_id</strong> as foreign key:<br><br>
+Then it saves the records data into the database table <strong>transaction</strong>. <br>The algorithm assumes that we have the account information stored in a database table (named <strong>account</strong>) which contains the accountId, the name and the email address of the customers. It's linked to the transaction with the table field <strong>account_id</strong> as foreign key:<br><br>
 
 ![Alt text](screenshot_database_model.png?raw=true "Postgres Database Model")
 
 <br>
 Then it makes the corresponding calculations to get the total balance, transactions per month and average debit and credit amounts and then builds a formatted email with the summary, which is sent to the customer in a pretty format. The csv file is also send as an attachment to the email: <br>
-If any of the records is not stored successfully in the database, an error is lo
+If any of the records is not stored successfully in the database, an error is logged so he can make the corresponding troubleshooting.<br>
 <strong>Prerrequisites:</strong><br>
 To run this project you need:<br>
 <ol>
