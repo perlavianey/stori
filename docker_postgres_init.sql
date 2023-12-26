@@ -15,5 +15,4 @@ CREATE TABLE IF NOT EXISTS transaction (
       REFERENCES account (account_id)
 );
 
-INSERT INTO account(name, email) VALUES ('Perla','pvramosr@gmail.com');
-INSERT INTO account(name, email) VALUES ('Vianey','perla.vianey.rr@gmail.com');
+INSERT INTO account(name, email) VALUES ('<YOUR_NAME>','<YOUR_EMAIL>');

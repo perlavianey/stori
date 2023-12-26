@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io/fs"
-	"log"
 	"net/smtp"
 	"os"
 	"sort"
@@ -14,21 +14,33 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-// ListarArchivo
-func ListarArchivo(directorio string) []fs.DirEntry {
+type Mail struct {
+	Sender  string
+	To      []string
+	Subject string
+	Body    string
+}
+
+// listFiles is a function that returns a list of files in a directory
+func listFiles(directorio string) ([]fs.DirEntry, error) {
 	files, err := os.ReadDir(directorio)
 	if err != nil {
-		log.Print("Couldn't list files:", err)
-		return []fs.DirEntry{}
+		return []fs.DirEntry{}, err
 	}
 	sort.Slice(files, func(i, j int) bool {
 		return files[i].Name() < files[j].Name()
 	})
-	return files
+	return files, nil
 }
 
+// convertTransactions is a function that converts a csv file to an array of database.Transaction
 func convertTransactions(data [][]string, ulid string) []database.Transaction {
 	var transactions []database.Transaction
 	for i, line := range data {
@@ -49,7 +61,7 @@ func convertTransactions(data [][]string, ulid string) []database.Transaction {
 			}
 			rec.Filename = ulid
 			t := time.Now()
-			rec.Timestamp = GetUTCTimeFormat(t)
+			rec.Timestamp = getUTCTimeFormat(t)
 			transactions = append(transactions, rec)
 		}
 
@@ -57,14 +69,15 @@ func convertTransactions(data [][]string, ulid string) []database.Transaction {
 	return transactions
 }
 
-// BUCKET S3: arn:aws:s3:::transactions-stori-pv
-func GetUTCTimeFormat(date time.Time) string {
+// getUTCTimeFormat returns the input date in UTC time format
+func getUTCTimeFormat(date time.Time) string {
 	layout := "2006-01-02T15:04:05.000Z07:00"
 
 	formattedDate := date.Format(layout)
 	return formattedDate
 }
 
+// calculateTotalBalance is a function that calculates the total balance of a list of transactions
 func calculateTotalBalance(transactionList []database.Transaction) (total float64, e error) {
 	for _, transaction := range transactionList {
 		total += transaction.Amount
@@ -72,6 +85,7 @@ func calculateTotalBalance(transactionList []database.Transaction) (total float6
 	return
 }
 
+// calculateTransactionsPerMonth is a function that divides a list of transactions by month and returns them into a map of transactions grouped by month
 func calculateTransactionsPerMonth(transactionList []database.Transaction) (transactionsPerMonth map[string]int, e error) {
 	transactionsPerMonth = make(map[string]int)
 
@@ -83,6 +97,7 @@ func calculateTransactionsPerMonth(transactionList []database.Transaction) (tran
 	return
 }
 
+// calculateAverageDebit is a function that calculates the average debit amount of a list of transactions
 func calculateAverageDebit(transactionList []database.Transaction) (average float64, e error) {
 	var counter int
 	for _, transaction := range transactionList {
@@ -95,6 +110,7 @@ func calculateAverageDebit(transactionList []database.Transaction) (average floa
 	return
 }
 
+// calculateAverageCredit is a function that calculates the average credit amount of a list of transactions
 func calculateAverageCredit(transactionList []database.Transaction) (average float64, e error) {
 	var counter int
 	for _, transaction := range transactionList {
@@ -107,6 +123,7 @@ func calculateAverageCredit(transactionList []database.Transaction) (average flo
 	return
 }
 
+// getSummary is a function that calculates the summary of a list of transactions and returns them into a slice of strings, ready to print on the email
 func getSummary(transactionList []database.Transaction) ([]string, error) {
 	var summary []string
 	//calculate summary
@@ -144,13 +161,7 @@ func getSummary(transactionList []database.Transaction) ([]string, error) {
 	return summary, nil
 }
 
-type Mail struct {
-	Sender  string
-	To      []string
-	Subject string
-	Body    string
-}
-
+// sendEmail is a function that sends an email with the summary of a list of transactions
 func sendEmail(name string, email string, summary []string, fileByte []byte) error {
 	sender := "storitests@gmail.com"
 	password := "eixy zwpd olde vsrn"
@@ -170,7 +181,7 @@ func sendEmail(name string, email string, summary []string, fileByte []byte) err
 	host := "smtp.gmail.com"
 	addr := "smtp.gmail.com:587"
 
-	data := BuildMail(name, summary, request, fileByte)
+	data := buildMail(name, summary, request, fileByte)
 	auth := smtp.PlainAuth("", sender, password, host)
 	err := smtp.SendMail(addr, auth, sender, to, data)
 
@@ -182,7 +193,8 @@ func sendEmail(name string, email string, summary []string, fileByte []byte) err
 	return nil
 }
 
-func BuildMail(name string, summary []string, mail Mail, fileByte []byte) []byte {
+// buildMail is a function that builds the email body from a template and returns it as a byte array
+func buildMail(name string, summary []string, mail Mail, fileByte []byte) []byte {
 
 	var buf bytes.Buffer
 
@@ -224,4 +236,28 @@ func BuildMail(name string, summary []string, mail Mail, fileByte []byte) []byte
 	buf.WriteString("--")
 
 	return buf.Bytes()
+}
+
+// uploadFileToS3 is a function that uploads a file to an S3 bucket
+func uploadFileToS3(fileIdentifier string, fileByte []byte) error {
+	KeyId := os.Getenv("AWS_ACCESS_KEY_ID")
+	SecretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	s3Config := &aws.Config{
+		Region:      aws.String("us-east-2"),
+		Credentials: credentials.NewStaticCredentials(KeyId, SecretKey, ""),
+	}
+	s3Session := session.New(s3Config)
+
+	uploader := s3manager.NewUploader(s3Session)
+	input := &s3manager.UploadInput{
+		Bucket:      aws.String("transactions-stori-pv"),                        // bucket's name
+		Key:         aws.String(fileIdentifier + "/" + fileIdentifier + ".csv"), // file key
+		Body:        bytes.NewReader(fileByte),                                  // body of the file
+		ContentType: aws.String("text/csv"),                                     // content type
+	}
+	_, err := uploader.UploadWithContext(context.Background(), input)
+	if err != nil {
+		return err
+	}
+	return nil
 }

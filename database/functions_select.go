@@ -4,6 +4,7 @@ import (
 	"database/sql"
 )
 
+// GetAccountData is a function that gets the data of an account from the database
 func GetAccountData(postgresdb *sql.DB, IdAccount string) (string, string, error) {
 	queryString := `SELECT name,email from account where account_id = $1;`
 	row := postgresdb.QueryRow(queryString, IdAccount)

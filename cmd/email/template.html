@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html>
-<body>
-    <img src="https://comunidadblogger.net/wp-content/uploads/2022/03/stori-logo.jpg" width="145" height="120">
-    <h4>Dear {{.Name}}:</h4>
-    <p>Here you have your transactions summary:</p>
-    <p>{{ range $i := .Message}}{{$i}}<br/>
-        {{end}}</p>
-    <p>Thank you for using Stori!</p>
-</body>
+    <body style="width:80%; margin-left: auto;margin-right:auto; padding: 1%;">
+        <img src="https://comunidadblogger.net/wp-content/uploads/2022/03/stori-logo.jpg" width="85" height="70">
+        <hr style="border-width: 0px;background-color: #84acf2;height: 2px;margin-top: 2%;">
+        <div style="margin: 3%;">
+            <h4>Dear {{.Name}}:</h4>
+            <p>Here you have your transactions summary:</p>
+            <p style="padding: 4%;">{{ range $i := .Message}}{{$i}}<br/>
+                {{end}}</p>
+            <p>For details, please check the attached file.</p>
+            <p>Thank you for using Stori!</p>
+        </div>
+        <hr style="border-width: 0px;background-color: #84acf2;height: 2px;margin-top: 2%;">
+    </body>
 </html>

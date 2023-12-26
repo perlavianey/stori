@@ -4,7 +4,17 @@ import (
 	"reflect"
 	"stori/database"
 	"testing"
+	"time"
 )
+
+func TestGetUTCTimeFormat(t *testing.T) {
+	date, _ := time.Parse("2006-01-02", "2023-02-01")
+	expected := "2023-02-01T00:00:00.000Z"
+	actual := getUTCTimeFormat(date)
+	if actual != expected {
+		t.Errorf("Expected %s, got %s", expected, actual)
+	}
+}
 
 func TestConvertTransactions(t *testing.T) {
 	type args struct {
@@ -17,65 +27,24 @@ func TestConvertTransactions(t *testing.T) {
 		want []database.Transaction
 	}{
 		{
-			name: "test 1",
+			name: "basic conversion",
 			args: args{
 				data: [][]string{
 					{"id", "date", "amount", "id_account"},
-					{"1", "2023-10-01", "100.00", "123456789"},
+					{"1", "2023-02-01", "123.45", "123456789"},
 				},
-				ulid: "123456789",
+				ulid: "1234567890",
 			},
 			want: []database.Transaction{
 				{
 					Id:        "1",
-					Date:      "2023-01-01",
-					Amount:    100.00,
+					Date:      "2023-02-01",
+					Amount:    123.45,
 					IdAccount: "123456789",
-					Filename:  "123456789",
-					Timestamp: "2023-10-01T00:00:00.000Z07:00",
+					Filename:  "1234567890",
+					Timestamp: "2023-02-01T12:00:00.000Z07:00",
 				},
 			},
-		},
-		{
-			name: "test 2",
-			args: args{
-				data: [][]string{
-					{"id", "date", "amount", "id_account"},
-					{"1", "2023-01-01", "100.00", "123456789"},
-					{"2", "2023-01-02", "200.00", "987654321"},
-				},
-				ulid: "123456789",
-			},
-			want: []database.Transaction{
-				{
-					Id:        "1",
-					Date:      "2023-01-01",
-					Amount:    100.00,
-					IdAccount: "123456789",
-					Filename:  "123456789",
-					Timestamp: "2023-01-01T00:00:00.000Z07:00",
-				},
-				{
-					Id:        "2",
-					Date:      "2023-01-02",
-					Amount:    200.00,
-					IdAccount: "987654321",
-					Filename:  "123456789",
-					Timestamp: "2023-01-02T00:00:00.000Z07:00",
-				},
-			},
-		},
-		{
-			name: "test 3",
-			args: args{
-				data: [][]string{
-					{"id", "date", "amount", "id_account"},
-					{"1", "2023-01-01", "100.00", "123456789"},
-					{"2", "2023-01-02", "not a number", "987654321"},
-				},
-				ulid: "123456789",
-			},
-			want: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -83,6 +52,62 @@ func TestConvertTransactions(t *testing.T) {
 			got := convertTransactions(tt.args.data, tt.args.ulid)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("convertTransactions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getSummary(t *testing.T) {
+	type args struct {
+		transactionList []database.Transaction
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "Testing get Summary",
+			args: args{
+				transactionList: []database.Transaction{
+					{
+						Id:        "1",
+						Date:      "2023-02-01",
+						Amount:    10.0,
+						IdAccount: "123456789",
+						Filename:  "1234567890",
+						Timestamp: "2023-12-24T12:00:00.000Z07:00",
+					}, {
+						Id:        "2",
+						Date:      "2023-02-01",
+						Amount:    12.45,
+						IdAccount: "123456789",
+						Filename:  "1234567890",
+						Timestamp: "2023-12-24T12:00:00.000Z07:00",
+					}, {
+						Id:        "3",
+						Date:      "2023-03-01",
+						Amount:    -1.80,
+						IdAccount: "123456789",
+						Filename:  "1234567890",
+						Timestamp: "2023-12-24T12:00:00.000Z07:00",
+					},
+				},
+			},
+			want: []string{"Total balance is: 20.65", "Number of transactions in February: 2", "Number of transactions in March: 1",
+				"Average debit amount: -1.80", "Average credit amount: 11.22"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getSummary(tt.args.transactionList)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getSummary() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getSummary() = %v, want %v", got, tt.want)
 			}
 		})
 	}

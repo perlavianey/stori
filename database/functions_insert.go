@@ -4,6 +4,7 @@ import (
 	"database/sql"
 )
 
+// InsertRequest is a function that inserts a new transaction into the database
 func InsertRequest(postgresdb *sql.DB, transaction Transaction) error {
 	queryString := `
 	INSERT INTO transaction (
