@@ -6,6 +6,7 @@ As a feature, it's able to save the csv file in AWS S3.
 <br>
 <strong>GitHub repository:</strong><br> 
 https://github.com/perlavianey/stori<br>
+Release v.0.0: https://github.com/perlavianey/stori/releases/tag/storiChallengeDocker
 <br>
 
 <strong>Built With:</strong><br>
