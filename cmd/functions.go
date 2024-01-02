@@ -181,10 +181,12 @@ func sendEmail(name string, email string, summary []string, fileByte []byte) err
 	host := "smtp.gmail.com"
 	addr := "smtp.gmail.com:587"
 
-	data := buildMail(name, summary, request, fileByte)
+	data, err := buildMail(name, summary, request, fileByte)
+	if err != nil {
+		return err
+	}
 	auth := smtp.PlainAuth("", sender, password, host)
-	err := smtp.SendMail(addr, auth, sender, to, data)
-
+	err = smtp.SendMail(addr, auth, sender, to, data)
 	if err != nil {
 		return err
 	}
@@ -194,7 +196,7 @@ func sendEmail(name string, email string, summary []string, fileByte []byte) err
 }
 
 // buildMail is a function that builds the email body from a template and returns it as a byte array
-func buildMail(name string, summary []string, mail Mail, fileByte []byte) []byte {
+func buildMail(name string, summary []string, mail Mail, fileByte []byte) ([]byte, error) {
 
 	var buf bytes.Buffer
 
@@ -212,7 +214,7 @@ func buildMail(name string, summary []string, mail Mail, fileByte []byte) []byte
 	buf.WriteString("MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n")
 	t, err := template.ParseFiles("/app/cmd/email/template.html")
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 	t.Execute(&buf, struct {
 		Name    string
@@ -235,7 +237,7 @@ func buildMail(name string, summary []string, mail Mail, fileByte []byte) []byte
 
 	buf.WriteString("--")
 
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
 
 // uploadFileToS3 is a function that uploads a file to an S3 bucket

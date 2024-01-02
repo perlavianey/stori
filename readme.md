@@ -50,4 +50,4 @@ To run this project:<br>
 <li>Open a new console terminal and run the command <strong>docker run stori</strong></li>
 </ol>
 
-You'll get an email to the address specified in step 2, formatted with the Stori's logo, which has the Summary of the transactions indicated in the file directory/input.csv and this file as an attachment. This summary contains the total balance, the number of transactions per month and the average debit and credit amounts.
+<p>You'll get an email to the address specified in step 2, formatted with the Stori's logo, which has the Summary of the transactions indicated in the file directory/input.csv and this file as an attachment. This summary contains the total balance, the number of transactions per month and the average debit and credit amounts.</p>
